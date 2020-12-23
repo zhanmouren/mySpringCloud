@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.zhan.fastupload.mapper.AutoCreateTblMapper">
+
+    <!--删除表-->
+    <update id="dropTable">
+       DROP TABLE IF EXISTS ${tableName}
+    </update>
+
+    <!--创建表-->
+    <update id="createTable" parameterType="com.zhan.fastupload.bean.TblTable">
+       create table ${tableName}(
+          `id`   int(20) not null AUTO_INCREMENT  COMMENT '编号',
+          `user_name` varchar(50) DEFAULT NULL COMMENT '用户名',
+          `${operation}` varchar(50) DEFAULT NULL COMMENT '用户操作',
+          `method` varchar(200) DEFAULT NULL COMMENT '请求方法',
+           PRIMARY KEY (`id`)
+       )ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='用户操作日志';
+    </update>
+
+    <!--查询是否存在表-->
+    <select id="existTable" parameterType="String" resultType="Integer">
+       select  count(*)
+       from information_schema.TABLES
+      where table_name=#{tableName}
+    </select>
+
+    <resultMap id="BaseResultMap" type="com.zhan.fastupload.bean.TblSalesOrder">
+        <id column="orderId"  jdbcType="VARCHAR" property="orderId" />
+        <result column="orderNo" jdbcType="VARCHAR" property="orderNo"/>
+        <result column="orderAddress" jdbcType="VARCHAR" property="orderAddress"/>
+
+        <collection property="orderDetList" ofType="com.zhan.fastupload.bean.TblSalesOrderDet">
+            <id column="detId" jdbcType="VARCHAR" property="detId" />
+            <result column="proName" jdbcType="VARCHAR" property="proName" />
+            <result column="proPrice" jdbcType="VARCHAR" property="proPrice" />
+            <result column="ordermainId" jdbcType="VARCHAR" property="ordermainId" />
+        </collection>
+
+        <collection property="addrDetList" ofType="com.zhan.fastupload.bean.tbladdrdetBean">
+            <id column="detAddrId" jdbcType="VARCHAR" property="detAddrId" />
+            <result column="detAddr" jdbcType="VARCHAR" property="detAddr" />
+            <result column="detRemoteIp" jdbcType="VARCHAR" property="detRemoteIp" />
+            <result column="addrmainId" jdbcType="VARCHAR" property="addrmainId" />
+
+            <association property="userbean" resultMap="myuser">
+            </association>
+        </collection>
+    </resultMap>
+
+    <resultMap id="myuser"  type="com.zhan.fastupload.bean.tbluser">
+        <id column="userId" jdbcType="VARCHAR" property="userId"/>
+        <result column="userName" jdbcType="VARCHAR" property="userName"/>
+        <result column="addrId" jdbcType="VARCHAR" property="addrId"/>
+    </resultMap>
+
+    <!--查询销售订单，返回主和明细-->
+    <select id="queryOrderList" parameterType="com.zhan.fastupload.bean.TblSalesOrder" resultMap="BaseResultMap">
+        select
+        tblSalesOrder.id as orderId,tblSalesOrder.orderNo as orderNo,tblSalesOrder.orderAddress as orderAddress,
+        tblSalesOrderDet.id as detId,tblSalesOrderDet.proName as proName,tblSalesOrderDet.proPrice as proPrice,tblSalesOrderDet.mainId as ordermainId,
+        tbladdrdet.id  as detAddrId,tbladdrdet.detAddr as detAddr,tbladdrdet.detRemoteIp as detRemoteIp,tbladdrdet.mainId as addrmainId,
+        tbluser.id as userId,tbluser.userName as userName,tbluser.addrId as addrId
+        from tblSalesOrder
+        left join tblSalesOrderDet on tblSalesOrderDet.mainId=tblSalesOrder.id
+        left join tbladdrdet on tbladdrdet.mainId=tblSalesOrder.id
+        left join tbluser on tbluser.addrId=tbladdrdet.id
+        where tblSalesOrder.id=#{orderId}
+    </select>
+
+</mapper>

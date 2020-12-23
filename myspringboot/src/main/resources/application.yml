@@ -1,0 +1,46 @@
+spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+  application:
+    name: fastdfsUpload
+  datasource:
+    driver-class-name: org.gjt.mm.mysql.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/biye?useUnicode=true&characterEncoding=UTF-8&serverTimezone=UTC&useSSL=false
+    druid:
+      password: 123456
+      username: root
+
+  #自动创建表配置
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL5InnoDBDialect
+        enable_lazy_load_no_trans: true
+        hbm2ddl:
+          auto: update
+    show-sql: true
+
+server:
+  port: 9999
+
+eureka:
+  client:
+    #需要注册到注册中心
+    register-with-eureka: true
+    #需要检索服务
+    fetch-registry: true
+    service-url:
+      #默认访问端点
+      #defaultZone: http://localhost:7001/eureka
+      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/  #集群版本
+
+
+# spring boot集成mybatis的方式打印sql
+mybatis:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+

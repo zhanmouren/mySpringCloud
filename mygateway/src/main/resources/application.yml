@@ -1,0 +1,60 @@
+server:
+  port: 9527
+spring:
+  application:
+    name: cloud-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: test-id
+          uri: lb://cloudserverorder   #lb代表的是loadbalance，下面的条件匹配成功后，跳转的uri
+          predicates:
+            - Path= /api/eureka/**    #匹配路径  做为条件
+          order: 1
+
+        - id: consume-id
+          uri: lb://cloudserverorderconsumer   #lb代表的是loadbalance
+          predicates:
+            - Path= /orderconsumer/eureka/**
+            - Header= token,123 #代表请求头需要 key为token，value为123 不然会被拦截，也可以直接一个参数
+          order: 2
+
+
+          filters:
+          - name: RequestRateLimiter   #请求数限流名称，名称不能随便改,默认的fatory
+            args:
+              #用户身份识别的唯一标识，自己定义启动类那边
+              key-resolver: "#{@keyResolver}"
+              #每秒钟允许有一个请求
+              redis-rate-limiter.replenishRate: 1
+              #允许有并发一个请求
+              redis-rate-limiter.burstcapacity: 1
+      discovery:
+        locator:
+          enabled: false  #表明gateway开启服务注册和发现的功能，并且spring cloud gateway自动根据服务发现为每一个服务创建了一个router，# 这个router将以服务名开头的请求路径转发到对应的服务
+          lower-case-service-id: true #将请求路径上的服务名配置为小写（因为服务注册的时候，向注册中心注册时将服务名转成大写的了,比如以/service-hi/*的请求路径被路由转发到服务名为service-hi的服务上
+
+  redis:
+    # redis数据库索引(默认为0)，我们使用索引为3的数据库，避免和其他数据库冲突
+    database: 3
+    # redis服务器地址（默认为loaclhost）
+    host: 192.168.199.201
+    # redis端口（默认为6379）
+    post: 6379
+    # redis访问密码（默认为空）
+    password:
+
+
+
+eureka:
+  instance:
+    hostname: cloud-gateway-service
+  client:
+    fetch-registry: true
+    register-with-eureka: true
+    service-url:
+      #默认访问端点
+      #defaultZone: http://localhost:7001/eureka
+      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/  #集群版本
+
+
